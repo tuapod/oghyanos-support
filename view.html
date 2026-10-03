@@ -10,29 +10,107 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/chat.css">
 </head>
-<body class="dark"> <!-- تم تاریک پیش‌فرض -->
-    <div class="chat-container">
-        <!-- هدر چت -->
-        <header class="chat-header">
-            <a href="/" class="back-btn">⬅ بازگشت</a>
-            <div class="chat-title-area">
-                <h1 id="chat-subject">در حال بارگذاری...</h1>
-                <span class="chat-status" id="chat-status">...</span>
-            </div>
-            <div class="chat-avatar">🎧</div>
-        </header>
+<body class="dark">
+    <div class="chat-layout">
+        
+        <!-- بخش اصلی چت -->
+        <main class="chat-main">
+            <!-- هدر -->
+            <header class="chat-topbar">
+                <a href="/" class="back-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    <span>بازگشت</span>
+                </a>
+                
+                <div class="chat-title">
+                    <h1 id="chat-subject">در حال بارگذاری...</h1>
+                    <div class="chat-meta">
+                        <span class="status-badge" id="chat-status">
+                            <span class="dot"></span>
+                            <span class="text">...</span>
+                        </span>
+                        <span class="divider"></span>
+                        <span class="ticket-id" id="ticket-id-display">...</span>
+                    </div>
+                </div>
 
-        <!-- بخش پیام‌ها -->
-        <main class="chat-messages" id="chat-messages">
-            <!-- پیام‌ها توسط جاوااسکریپت اینجا رندر میشن -->
-            <div class="loading-state">در حال دریافت اطلاعات...</div>
+                <div class="topbar-actions">
+                    <button class="icon-btn" title="اطلاعات تیکت" id="toggle-info">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- بخش پیام‌ها -->
+            <div class="chat-messages" id="chat-messages">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <span>در حال دریافت اطلاعات...</span>
+                </div>
+            </div>
+
+            <!-- بخش ارسال پیام -->
+            <footer class="chat-composer">
+                <div class="composer-inner">
+                    <textarea id="reply-input" placeholder="پاسخ خود را اینجا بنویسید..." rows="1"></textarea>
+                    <button id="send-reply" class="send-btn" title="ارسال">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="composer-hint">برای ارسال سریع، Enter را بزنید. برای خط جدید، Shift + Enter.</div>
+            </footer>
         </main>
 
-        <!-- بخش ارسال پیام -->
-        <footer class="chat-input-area">
-            <textarea id="reply-input" placeholder="پاسخ خود را اینجا بنویسید..." rows="1"></textarea>
-            <button id="send-reply" class="send-btn">ارسال</button>
-        </footer>
+        <!-- سایدبار اطلاعات تیکت -->
+        <aside class="info-sidebar" id="info-sidebar">
+            <div class="info-header">
+                <h2>اطلاعات تیکت</h2>
+                <button class="close-info" id="close-info">✕</button>
+            </div>
+
+            <div class="info-section">
+                <div class="info-avatar">🎧</div>
+                <div class="info-title">پشتیبانی OGHYANOS</div>
+                <div class="info-subtitle">تیم پشتیبانی آنلاین</div>
+            </div>
+
+            <div class="info-divider"></div>
+
+            <div class="info-item">
+                <span class="info-label">موضوع</span>
+                <span class="info-value" id="info-subject">-</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">دسته‌بندی</span>
+                <span class="info-value" id="info-category">-</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">وضعیت</span>
+                <span class="info-value" id="info-status">-</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">تاریخ ایجاد</span>
+                <span class="info-value" id="info-date">-</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">شناسه تیکت</span>
+                <span class="info-value mono" id="info-id">-</span>
+            </div>
+        </aside>
+
     </div>
 
     <script src="js/view.js"></script>
