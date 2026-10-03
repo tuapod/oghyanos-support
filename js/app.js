@@ -162,9 +162,9 @@ async function loadTickets() {
             }
 
             container.innerHTML = tickets.map(ticket => {
-                const statusClass = ticket.status === 'open' ? 'open' : 'answered';
-                const statusText = ticket.status === 'open' ? 'در انتظار بررسی' : 'پاسخ داده شده';
-                
+                const statusClass = ticket.status === 'open' ? 'open' : (ticket.status === 'closed' ? 'closed' : 'answered');
+                const statusText = ticket.status === 'open' ? 'در انتظار بررسی' : (ticket.status === 'closed' ? 'بسته شده' : 'پاسخ داده شده');
+                                
                 // اگه ادمین بود، نام کاربر صاحب تیکت رو نشون بده
                 const ownerBadge = isAdmin 
                     ? `<span class="ticket-owner">👤 ${escapeHTML(ticket.username || 'ناشناس')}</span>` 

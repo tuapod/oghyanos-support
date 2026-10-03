@@ -557,3 +557,112 @@
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ==================== دکمه‌های اکشن ادمین ==================== */
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-secondary);
+    font-family: var(--font-family);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.action-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.close-ticket {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.25);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.close-ticket:hover:not(:disabled) {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.reopen-ticket {
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.25);
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.reopen-ticket:hover:not(:disabled) {
+    background: #10b981;
+    color: white;
+    border-color: #10b981;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+/* وضعیت بسته شده */
+.status-badge.closed {
+    color: #94a3b8;
+    background: rgba(148, 163, 184, 0.15);
+}
+
+.status-badge.closed .dot {
+    background: #94a3b8;
+    box-shadow: 0 0 8px rgba(148, 163, 184, 0.8);
+    animation: none;
+}
+
+/* بنر تیکت بسته شده */
+.closed-banner {
+    background: linear-gradient(135deg, rgba(148, 163, 184, 0.12), rgba(148, 163, 184, 0.06));
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin: auto auto 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 500px;
+}
+
+.closed-banner svg {
+    flex-shrink: 0;
+}
+
+/* غیرفعال کردن ارسال پیام در تیکت بسته شده */
+.chat-composer.disabled .composer-inner {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.chat-composer.disabled::after {
+    content: 'این تیکت بسته شده است. برای ادامه، ادمین باید آن را باز کند.';
+    display: block;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-top: 12px;
+}
+.ticket-card .status.closed {
+    background: rgba(148, 163, 184, 0.12);
+    color: #94a3b8;
+    border-color: rgba(148, 163, 184, 0.25);
+}

@@ -67,29 +67,56 @@ async function loadTicketDetails(ticketId) {
         
         const ticket = await response.json();
         const currentUser = Auth.getUser();
+        const isAdmin = currentUser?.isAdmin === true;
 
+        // ==================== هدر ====================
         subjectEl.textContent = ticket.subject;
-        const statusText = ticket.status === 'open' ? 'در انتظار بررسی' : 'پاسخ داده شده';
-        statusEl.querySelector('.text').textContent = statusText;
-        if (ticket.status === 'open') statusEl.classList.add('open');
-        else statusEl.classList.remove('open');
+        
+        // وضعیت
+        const statusMap = {
+            'open': { text: 'در انتظار بررسی', class: 'open' },
+            'answered': { text: 'پاسخ داده شده', class: '' },
+            'closed': { text: 'بسته شده', class: 'closed' }
+        };
+        const st = statusMap[ticket.status] || statusMap['open'];
+        statusEl.querySelector('.text').textContent = st.text;
+        statusEl.className = 'status-badge ' + st.class;
 
         document.getElementById('ticket-id-display').textContent = '#' + ticket.id.substring(0, 8);
+
+        // ==================== سایدبار اطلاعات ====================
         document.getElementById('info-subject').textContent = ticket.subject;
         document.getElementById('info-id').textContent = ticket.id;
         document.getElementById('info-date').textContent = formatDate(ticket.createdAt);
         
         const categoryMap = { 'technical': 'مشکل فنی', 'billing': 'مالی و اشتراک', 'suggestion': 'انتقاد و پیشنهاد' };
         document.getElementById('info-category').textContent = categoryMap[ticket.category] || ticket.category;
-        document.getElementById('info-status').textContent = statusText;
+        document.getElementById('info-status').textContent = st.text;
 
-        // اگه ادمین داره تیکت یکی دیگه رو می‌بینه، نشون بده
-        if (currentUser.isAdmin && ticket.userId !== currentUser.id) {
+        // اگه ادمین داره تیکت یکی دیگه رو می‌بینه
+        if (isAdmin && ticket.userId !== currentUser.id) {
             const infoTitle = document.querySelector('.info-title');
             if (infoTitle) infoTitle.textContent = `تیکت کاربر: ${ticket.username}`;
         }
 
-        // پیام اصلی (از صاحب تیکت)
+        // ==================== دکمه‌های ادمین ====================
+        const closeBtn = document.getElementById('close-ticket-btn');
+        const reopenBtn = document.getElementById('reopen-ticket-btn');
+        
+        if (isAdmin) {
+            if (ticket.status === 'closed') {
+                closeBtn.style.display = 'none';
+                reopenBtn.style.display = 'inline-flex';
+            } else {
+                closeBtn.style.display = 'inline-flex';
+                reopenBtn.style.display = 'none';
+            }
+        } else {
+            closeBtn.style.display = 'none';
+            reopenBtn.style.display = 'none';
+        }
+
+        // ==================== پیام‌ها ====================
         let messagesHTML = `
             <div class="message user">
                 <div class="message-avatar">👤</div>
@@ -103,12 +130,12 @@ async function loadTicketDetails(ticketId) {
 
         if (ticket.replies && ticket.replies.length > 0) {
             ticket.replies.forEach(reply => {
-                const isAdmin = reply.isAdmin;
+                const isReplyAdmin = reply.isAdmin;
                 messagesHTML += `
-                    <div class="message ${isAdmin ? 'admin' : 'user'}">
-                        <div class="message-avatar">${isAdmin ? '🛡️' : '👤'}</div>
+                    <div class="message ${isReplyAdmin ? 'admin' : 'user'}">
+                        <div class="message-avatar">${isReplyAdmin ? '🛡️' : '👤'}</div>
                         <div class="message-content">
-                            <span class="message-author">${isAdmin ? '🛡️ پشتیبانی OGHYANOS' : escapeHTML(reply.username || ticket.username)}</span>
+                            <span class="message-author">${isReplyAdmin ? '🛡️ پشتیبانی OGHYANOS' : escapeHTML(reply.username || ticket.username)}</span>
                             <div class="bubble">${escapeHTML(reply.message)}</div>
                             <span class="message-time">${formatTime(reply.createdAt)}</span>
                         </div>
@@ -117,12 +144,79 @@ async function loadTicketDetails(ticketId) {
             });
         }
 
+        // اگه تیکت بسته شده، بنر نشون بده
+        if (ticket.status === 'closed') {
+            const closedDate = ticket.closedAt ? formatDate(ticket.closedAt) : '';
+            const closedBy = ticket.closedBy ? `توسط ${ticket.closedBy}` : '';
+            messagesHTML += `
+                <div class="closed-banner">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 12l2 2 4-4"/>
+                        <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                    <span>این تیکت بسته شده است ${closedBy}${closedDate ? ' - ' + closedDate : ''}</span>
+                </div>
+            `;
+        }
+
         messagesContainer.innerHTML = messagesHTML;
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        // ==================== غیرفعال کردن ارسال در تیکت بسته ====================
+        const composer = document.querySelector('.chat-composer');
+        if (composer) {
+            if (ticket.status === 'closed' && !isAdmin) {
+                composer.classList.add('disabled');
+            } else {
+                composer.classList.remove('disabled');
+            }
+        }
+
+        // ==================== Event Listener دکمه‌ها ====================
+        // (هر بار مجدد اضافه میشه، پس اول کلون می‌کنیم که لیسنر تکراری نشه)
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+        newCloseBtn.addEventListener('click', () => changeTicketStatus(ticketId, 'close'));
+
+        const newReopenBtn = reopenBtn.cloneNode(true);
+        reopenBtn.parentNode.replaceChild(newReopenBtn, reopenBtn);
+        newReopenBtn.addEventListener('click', () => changeTicketStatus(ticketId, 'reopen'));
 
     } catch (error) {
         console.error(error);
         messagesContainer.innerHTML = '<div class="no-messages">خطا در دریافت اطلاعات تیکت.</div>';
+    }
+}
+
+// تابع تغییر وضعیت تیکت (بستن یا باز کردن)
+async function changeTicketStatus(ticketId, action) {
+    const actionText = action === 'close' ? 'بستن' : 'باز کردن';
+    
+    if (!confirm(`آیا از ${actionText} این تیکت مطمئن هستید؟`)) return;
+
+    const btn = document.getElementById(action === 'close' ? 'close-ticket-btn' : 'reopen-ticket-btn');
+    const originalText = btn.querySelector('span').textContent;
+    btn.disabled = true;
+    btn.querySelector('span').textContent = '...';
+
+    try {
+        const response = await apiFetch(`${WORKER_URL}/api/tickets/${ticketId}/${action}`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            // رفرش اطلاعات تیکت
+            loadTicketDetails(ticketId);
+        } else {
+            const data = await response.json();
+            alert(data.error || `خطا در ${actionText} تیکت`);
+        }
+    } catch (error) {
+        console.error(error);
+        alert('خطا در ارتباط با سرور');
+    } finally {
+        btn.disabled = false;
+        btn.querySelector('span').textContent = originalText;
     }
 }
 async function sendReply(ticketId) {

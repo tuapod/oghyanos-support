@@ -37,7 +37,24 @@
                     </div>
                 </div>
 
-                <div class="topbar-actions">
+                <div class="topbar-actions" id="topbar-actions">
+                    <!-- دکمه بستن تیکت (فقط ادمین) -->
+                    <button class="action-btn close-ticket" id="close-ticket-btn" style="display: none;" title="بستن تیکت">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                        <span>بستن</span>
+                    </button>
+                    
+                    <!-- دکمه باز کردن مجدد (فقط ادمین) -->
+                    <button class="action-btn reopen-ticket" id="reopen-ticket-btn" style="display: none;" title="باز کردن مجدد">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                            <path d="M3 3v5h5"/>
+                        </svg>
+                        <span>باز کردن</span>
+                    </button>
+
                     <button class="icon-btn" title="اطلاعات تیکت" id="toggle-info">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"/>
