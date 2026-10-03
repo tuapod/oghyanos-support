@@ -66,6 +66,7 @@ async function loadTicketDetails(ticketId) {
         if (!response.ok) throw new Error('تیکت پیدا نشد');
         
         const ticket = await response.json();
+        const currentUser = Auth.getUser();
 
         subjectEl.textContent = ticket.subject;
         const statusText = ticket.status === 'open' ? 'در انتظار بررسی' : 'پاسخ داده شده';
@@ -78,20 +79,22 @@ async function loadTicketDetails(ticketId) {
         document.getElementById('info-id').textContent = ticket.id;
         document.getElementById('info-date').textContent = formatDate(ticket.createdAt);
         
-        const categoryMap = {
-            'technical': 'مشکل فنی',
-            'billing': 'مالی و اشتراک',
-            'suggestion': 'انتقاد و پیشنهاد'
-        };
+        const categoryMap = { 'technical': 'مشکل فنی', 'billing': 'مالی و اشتراک', 'suggestion': 'انتقاد و پیشنهاد' };
         document.getElementById('info-category').textContent = categoryMap[ticket.category] || ticket.category;
         document.getElementById('info-status').textContent = statusText;
 
-        const user = Auth.getUser();
+        // اگه ادمین داره تیکت یکی دیگه رو می‌بینه، نشون بده
+        if (currentUser.isAdmin && ticket.userId !== currentUser.id) {
+            const infoTitle = document.querySelector('.info-title');
+            if (infoTitle) infoTitle.textContent = `تیکت کاربر: ${ticket.username}`;
+        }
+
+        // پیام اصلی (از صاحب تیکت)
         let messagesHTML = `
             <div class="message user">
                 <div class="message-avatar">👤</div>
                 <div class="message-content">
-                    <span class="message-author">${escapeHTML(user.username)}</span>
+                    <span class="message-author">${escapeHTML(ticket.username)}</span>
                     <div class="bubble">${escapeHTML(ticket.message)}</div>
                     <span class="message-time">${formatTime(ticket.createdAt)}</span>
                 </div>
@@ -103,9 +106,9 @@ async function loadTicketDetails(ticketId) {
                 const isAdmin = reply.isAdmin;
                 messagesHTML += `
                     <div class="message ${isAdmin ? 'admin' : 'user'}">
-                        <div class="message-avatar">${isAdmin ? '🎧' : '👤'}</div>
+                        <div class="message-avatar">${isAdmin ? '🛡️' : '👤'}</div>
                         <div class="message-content">
-                            <span class="message-author">${isAdmin ? 'پشتیبانی OGHYANOS' : escapeHTML(user.username)}</span>
+                            <span class="message-author">${isAdmin ? '🛡️ پشتیبانی OGHYANOS' : escapeHTML(reply.username || ticket.username)}</span>
                             <div class="bubble">${escapeHTML(reply.message)}</div>
                             <span class="message-time">${formatTime(reply.createdAt)}</span>
                         </div>
@@ -122,7 +125,6 @@ async function loadTicketDetails(ticketId) {
         messagesContainer.innerHTML = '<div class="no-messages">خطا در دریافت اطلاعات تیکت.</div>';
     }
 }
-
 async function sendReply(ticketId) {
     const replyInput = document.getElementById('reply-input');
     const message = replyInput.value.trim();

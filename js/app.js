@@ -6,18 +6,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isLoggedIn = await initAuth();
     if (!isLoggedIn) return;
 
-    // آپدیت نام کاربر در سایدبار
+    // آپدیت نام کاربر + نشان ادمین
     const user = Auth.getUser();
     const userProfileEl = document.querySelector('.user-profile');
     if (userProfileEl && user) {
+        const adminBadge = user.isAdmin 
+            ? '<span style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; margin-right: 4px;">🛡️ ادمین</span>' 
+            : '';
         userProfileEl.innerHTML = `
             <span class="avatar">👤</span>
             <span>${escapeHTML(user.username)}</span>
+            ${adminBadge}
             <button class="logout-btn" id="logout-btn">خروج</button>
         `;
         document.getElementById('logout-btn').addEventListener('click', () => {
             if (confirm('آیا از حساب خود خارج می‌شوید؟')) Auth.logout();
         });
+    }
+
+    // تغییر عنوان اگه ادمین بود
+    if (user && user.isAdmin) {
+        const subtitle = document.querySelector('.subtitle');
+        if (subtitle) subtitle.textContent = 'پنل مدیریت - مشاهده همه تیکت‌های کاربران';
     }
 
     // 2. مدیریت تم
@@ -120,6 +130,10 @@ async function loadTickets() {
     const statAnswered = document.getElementById('stat-answered');
     const statTotal = document.getElementById('stat-total');
 
+    // چک کردن ادمین بودن کاربر
+    const currentUser = Auth.getUser();
+    const isAdmin = currentUser?.isAdmin === true;
+
     try {
         const response = await apiFetch(`${WORKER_URL}/api/tickets`);
         
@@ -131,30 +145,71 @@ async function loadTickets() {
             statAnswered.textContent = tickets.filter(t => t.status === 'answered').length;
 
             if (tickets.length === 0) {
+                const emptyMessage = isAdmin 
+                    ? 'هنوز هیچ تیکتی توسط کاربران ثبت نشده است.'
+                    : 'هنوز تیکتی ثبت نکرده‌اید.';
+                const emptyHint = isAdmin
+                    ? 'به محض ثبت تیکت توسط کاربران، اینجا نمایش داده می‌شود.'
+                    : 'برای شروع، از منوی کناری یک تیکت جدید ثبت کنید.';
+                    
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">📭</div>
-                        <div>هنوز تیکتی ثبت نکرده‌اید.</div>
-                        <div style="font-size: 0.9rem; opacity: 0.7;">برای شروع، از منوی کناری یک تیکت جدید ثبت کنید.</div>
+                        <div>${emptyMessage}</div>
+                        <div style="font-size: 0.9rem; opacity: 0.7;">${emptyHint}</div>
                     </div>`;
                 return;
             }
 
-            container.innerHTML = tickets.map(ticket => `
-                <div class="ticket-card" data-ticket-id="${ticket.id}">
-                    <h3>${escapeHTML(ticket.subject)}</h3>
-                    <p style="color: var(--text-secondary); font-size: 0.95rem;">${escapeHTML(ticket.message.substring(0, 80))}...</p>
-                    <span class="status">${ticket.status === 'open' ? 'در انتظار بررسی' : 'پاسخ داده شده'}</span>
-                </div>
-            `).join('');
+            container.innerHTML = tickets.map(ticket => {
+                const statusClass = ticket.status === 'open' ? 'open' : 'answered';
+                const statusText = ticket.status === 'open' ? 'در انتظار بررسی' : 'پاسخ داده شده';
+                
+                // اگه ادمین بود، نام کاربر صاحب تیکت رو نشون بده
+                const ownerBadge = isAdmin 
+                    ? `<span class="ticket-owner">👤 ${escapeHTML(ticket.username || 'ناشناس')}</span>` 
+                    : '';
 
+                // اگه ادمین بود و تعداد پاسخ‌ها رو نشون بده
+                const repliesCount = isAdmin && ticket.replies && ticket.replies.length > 0
+                    ? `<span class="ticket-replies">💬 ${ticket.replies.length} پاسخ</span>`
+                    : '';
+
+                return `
+                    <div class="ticket-card" data-ticket-id="${ticket.id}">
+                        <div class="ticket-header">
+                            <h3>${escapeHTML(ticket.subject)}</h3>
+                            ${ownerBadge}
+                        </div>
+                        <p class="ticket-preview">${escapeHTML(ticket.message.substring(0, 80))}${ticket.message.length > 80 ? '...' : ''}</p>
+                        <div class="ticket-footer">
+                            <span class="status ${statusClass}">${statusText}</span>
+                            ${repliesCount}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // اضافه کردن کلیک به کارت‌ها
             document.querySelectorAll('.ticket-card').forEach(card => {
                 card.addEventListener('click', () => {
                     window.location.href = `/view.html?id=${card.getAttribute('data-ticket-id')}`;
                 });
             });
+        } else {
+            const data = await response.json();
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <div>${escapeHTML(data.error || 'خطا در دریافت تیکت‌ها')}</div>
+                </div>`;
         }
     } catch (error) {
-        console.error(error);
+        console.error('Error loading tickets:', error);
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <div>خطا در ارتباط با سرور.</div>
+            </div>`;
     }
 }
