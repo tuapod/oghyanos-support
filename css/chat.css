@@ -193,16 +193,16 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* پیام کاربر - سمت راست */
+/* پیام کاربر - سمت راست در RTL */
 .message.user {
-    align-self: flex-end;
-    flex-direction: row;
+    align-self: flex-start;   /* در RTL یعنی راست */
+    flex-direction: row;       /* آواتار سمت راست حباب */
 }
 
-/* پیام ادمین - سمت چپ */
+/* پیام ادمین - سمت چپ در RTL */
 .message.admin {
-    align-self: flex-start;
-    flex-direction: row-reverse;
+    align-self: flex-end;      /* در RTL یعنی چپ */
+    flex-direction: row-reverse; /* آواتار سمت چپ حباب */
 }
 
 .message-avatar {
