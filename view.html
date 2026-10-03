@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مشاهده تیکت | OGHYANOS VPN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/chat.css">
+</head>
+<body class="dark"> <!-- تم تاریک پیش‌فرض -->
+    <div class="chat-container">
+        <!-- هدر چت -->
+        <header class="chat-header">
+            <a href="/" class="back-btn">⬅ بازگشت</a>
+            <div class="chat-title-area">
+                <h1 id="chat-subject">در حال بارگذاری...</h1>
+                <span class="chat-status" id="chat-status">...</span>
+            </div>
+            <div class="chat-avatar">🎧</div>
+        </header>
+
+        <!-- بخش پیام‌ها -->
+        <main class="chat-messages" id="chat-messages">
+            <!-- پیام‌ها توسط جاوااسکریپت اینجا رندر میشن -->
+            <div class="loading-state">در حال دریافت اطلاعات...</div>
+        </main>
+
+        <!-- بخش ارسال پیام -->
+        <footer class="chat-input-area">
+            <textarea id="reply-input" placeholder="پاسخ خود را اینجا بنویسید..." rows="1"></textarea>
+            <button id="send-reply" class="send-btn">ارسال</button>
+        </footer>
+    </div>
+
+    <script src="js/view.js"></script>
+</body>
+</html>

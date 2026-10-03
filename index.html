@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پشتیبانی OGHYANOS VPN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- سایدبار -->
+        <aside class="sidebar">
+            <div class="logo">
+                <span>OGHYANOS</span> VPN
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-target="tickets-list">
+                    <span class="icon">📋</span> تیکت‌های من
+                </button>
+                <button class="nav-btn" data-target="new-ticket">
+                    <span class="icon">➕</span> ثبت تیکت جدید
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="theme-toggle" class="theme-toggle">
+                    <span class="icon">🌙</span> تغییر تم
+                </button>
+            </div>
+        </aside>
+
+        <!-- محتوای اصلی -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="topbar">
+                    <div>
+                        <h1 id="page-title">تیکت‌های پشتیبانی</h1>
+                        <p class="subtitle">مدیریت و پیگیری درخواست‌های پشتیبانی</p>
+                    </div>
+                    <div class="user-profile">
+                        <span class="avatar">👤</span>
+                        <span>کاربر عزیز</span>
+                    </div>
+                </header>
+
+                <!-- کارت‌های آماری (فقط در صفحه لیست تیکت‌ها نمایش داده می‌شود) -->
+                <div id="stats-container" class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon open">📩</div>
+                        <div class="stat-info">
+                            <span class="stat-label">تیکت‌های باز</span>
+                            <span class="stat-value" id="stat-open">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon answered">✅</div>
+                        <div class="stat-info">
+                            <span class="stat-label">پاسخ داده شده</span>
+                            <span class="stat-value" id="stat-answered">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon total">📊</div>
+                        <div class="stat-info">
+                            <span class="stat-label">کل تیکت‌ها</span>
+                            <span class="stat-value" id="stat-total">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- بخش لیست تیکت‌ها -->
+                <section id="tickets-list" class="view-section active">
+                    <div class="ticket-filters">
+                        <div class="search-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" placeholder="جستجو در تیکت‌ها..." class="search-input">
+                        </div>
+                    </div>
+                    <div id="tickets-container" class="tickets-grid">
+                        <!-- تیکت‌ها توسط جاوااسکریپت اینجا رندر می‌شوند -->
+                    </div>
+                </section>
+
+                <!-- بخش ثبت تیکت جدید -->
+                <section id="new-ticket" class="view-section">
+                    <form id="ticket-form" class="ticket-form">
+                        <div class="form-group">
+                            <label for="subject">موضوع تیکت</label>
+                            <input type="text" id="subject" required placeholder="مثال: مشکل در اتصال به سرور فرانسه">
+                        </div>
+                        <div class="form-group">
+                            <label for="category">دسته‌بندی</label>
+                            <select id="category" required>
+                                <option value="technical">مشکل فنی</option>
+                                <option value="billing">مالی و اشتراک</option>
+                                <option value="suggestion">انتقاد و پیشنهاد</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">توضیحات کامل</label>
+                            <textarea id="message" rows="6" required placeholder="لطفاً مشکل خود را با جزئیات بنویسید..."></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">ارسال تیکت</button>
+                    </form>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js?v=2"></script>
+</body>
+</html>
