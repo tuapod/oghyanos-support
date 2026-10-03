@@ -1,6 +1,11 @@
+// js/view.js
 const WORKER_URL = 'https://oghyanos-api.ltfyamyry-0lt.workers.dev';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. بررسی احراز هویت
+    const isLoggedIn = await initAuth();
+    if (!isLoggedIn) return;
+
     const urlParams = new URLSearchParams(window.location.search);
     const ticketId = urlParams.get('id');
 
@@ -22,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // مدیریت سایدبار در موبایل
     document.getElementById('toggle-info').addEventListener('click', () => {
         document.getElementById('info-sidebar').classList.toggle('open');
     });
@@ -31,33 +35,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// فرمت تاریخ شمسی
 function formatDate(dateString) {
     try {
-        const date = new Date(dateString);
-        return date.toLocaleString('fa-IR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+        return new Date(dateString).toLocaleString('fa-IR', {
+            year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
         });
-    } catch {
-        return dateString;
-    }
+    } catch { return dateString; }
 }
 
-// فرمت ساعت
 function formatTime(dateString) {
     try {
-        const date = new Date(dateString);
-        return date.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
-    } catch {
-        return '';
-    }
+        return new Date(dateString).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+    } catch { return ''; }
 }
 
-// امن‌سازی متن برای جلوگیری از XSS
 function escapeHTML(str) {
     const div = document.createElement('div');
     div.textContent = str;
@@ -70,25 +62,18 @@ async function loadTicketDetails(ticketId) {
     const messagesContainer = document.getElementById('chat-messages');
 
     try {
-        const response = await fetch(`${WORKER_URL}/api/tickets/${ticketId}`);
+        const response = await apiFetch(`${WORKER_URL}/api/tickets/${ticketId}`);
         if (!response.ok) throw new Error('تیکت پیدا نشد');
         
         const ticket = await response.json();
 
-        // آپدیت هدر
         subjectEl.textContent = ticket.subject;
-        
         const statusText = ticket.status === 'open' ? 'در انتظار بررسی' : 'پاسخ داده شده';
         statusEl.querySelector('.text').textContent = statusText;
-        if (ticket.status === 'open') {
-            statusEl.classList.add('open');
-        } else {
-            statusEl.classList.remove('open');
-        }
+        if (ticket.status === 'open') statusEl.classList.add('open');
+        else statusEl.classList.remove('open');
 
         document.getElementById('ticket-id-display').textContent = '#' + ticket.id.substring(0, 8);
-
-        // آپدیت سایدبار
         document.getElementById('info-subject').textContent = ticket.subject;
         document.getElementById('info-id').textContent = ticket.id;
         document.getElementById('info-date').textContent = formatDate(ticket.createdAt);
@@ -101,12 +86,12 @@ async function loadTicketDetails(ticketId) {
         document.getElementById('info-category').textContent = categoryMap[ticket.category] || ticket.category;
         document.getElementById('info-status').textContent = statusText;
 
-        // ساخت پیام‌ها
+        const user = Auth.getUser();
         let messagesHTML = `
             <div class="message user">
                 <div class="message-avatar">👤</div>
                 <div class="message-content">
-                    <span class="message-author">شما</span>
+                    <span class="message-author">${escapeHTML(user.username)}</span>
                     <div class="bubble">${escapeHTML(ticket.message)}</div>
                     <span class="message-time">${formatTime(ticket.createdAt)}</span>
                 </div>
@@ -120,7 +105,7 @@ async function loadTicketDetails(ticketId) {
                     <div class="message ${isAdmin ? 'admin' : 'user'}">
                         <div class="message-avatar">${isAdmin ? '🎧' : '👤'}</div>
                         <div class="message-content">
-                            <span class="message-author">${isAdmin ? 'پشتیبانی OGHYANOS' : 'شما'}</span>
+                            <span class="message-author">${isAdmin ? 'پشتیبانی OGHYANOS' : escapeHTML(user.username)}</span>
                             <div class="bubble">${escapeHTML(reply.message)}</div>
                             <span class="message-time">${formatTime(reply.createdAt)}</span>
                         </div>
@@ -141,29 +126,26 @@ async function loadTicketDetails(ticketId) {
 async function sendReply(ticketId) {
     const replyInput = document.getElementById('reply-input');
     const message = replyInput.value.trim();
-    
     if (!message) return;
 
     const sendBtn = document.getElementById('send-reply');
     sendBtn.disabled = true;
 
     try {
-        const response = await fetch(`${WORKER_URL}/api/tickets/${ticketId}/reply`, {
+        const response = await apiFetch(`${WORKER_URL}/api/tickets/${ticketId}/reply`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: message })
+            body: JSON.stringify({ message })
         });
 
         if (response.ok) {
             replyInput.value = '';
-            replyInput.style.height = 'auto';
             loadTicketDetails(ticketId);
         } else {
-            alert('خطا در ارسال پاسخ');
+            const data = await response.json();
+            alert(data.error || 'خطا در ارسال پاسخ');
         }
     } catch (error) {
         console.error(error);
-        alert('خطا در ارتباط با سرور');
     } finally {
         sendBtn.disabled = false;
     }

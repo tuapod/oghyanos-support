@@ -1,13 +1,29 @@
+// js/app.js
 const WORKER_URL = 'https://oghyanos-api.ltfyamyry-0lt.workers.dev';
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. مدیریت تم (Dark/Light)
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. بررسی احراز هویت
+    const isLoggedIn = await initAuth();
+    if (!isLoggedIn) return;
+
+    // آپدیت نام کاربر در سایدبار
+    const user = Auth.getUser();
+    const userProfileEl = document.querySelector('.user-profile');
+    if (userProfileEl && user) {
+        userProfileEl.innerHTML = `
+            <span class="avatar">👤</span>
+            <span>${escapeHTML(user.username)}</span>
+            <button class="logout-btn" id="logout-btn">خروج</button>
+        `;
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            if (confirm('آیا از حساب خود خارج می‌شوید؟')) Auth.logout();
+        });
+    }
+
+    // 2. مدیریت تم
     const themeToggle = document.getElementById('theme-toggle');
     const currentTheme = localStorage.getItem('theme') || 'dark';
-    
-    if (currentTheme === 'dark') {
-        document.body.classList.add('dark');
-    }
+    if (currentTheme === 'dark') document.body.classList.add('dark');
 
     themeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark');
@@ -17,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         icon.textContent = theme === 'dark' ? '☀️' : '🌙';
     });
 
-    // 2. مدیریت ناوبری و مسیریابی
+    // 3. مسیریابی
     const navButtons = document.querySelectorAll('.nav-btn');
     const sections = document.querySelectorAll('.view-section');
     const pageTitle = document.getElementById('page-title');
@@ -28,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (b.getAttribute('data-target') === targetId) b.classList.add('active');
             else b.classList.remove('active');
         });
-
         sections.forEach(sec => sec.classList.remove('active'));
         document.getElementById(targetId).classList.add('active');
 
@@ -44,24 +59,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     navButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            navigateTo(btn.getAttribute('data-target'));
-        });
+        btn.addEventListener('click', () => navigateTo(btn.getAttribute('data-target')));
     });
 
     window.addEventListener('popstate', () => {
-        if (window.location.pathname === '/new') {
-            navigateTo('new-ticket', false);
-        } else {
-            navigateTo('tickets-list', false);
-        }
+        if (window.location.pathname === '/new') navigateTo('new-ticket', false);
+        else navigateTo('tickets-list', false);
     });
 
-    if (window.location.pathname === '/new') {
-        navigateTo('new-ticket', false);
-    }
+    if (window.location.pathname === '/new') navigateTo('new-ticket', false);
 
-    // 3. ارسال فرم تیکت جدید
+    // 4. ارسال فرم تیکت
     const ticketForm = document.getElementById('ticket-form');
     ticketForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -70,9 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.disabled = true;
 
         try {
-            const response = await fetch(`${WORKER_URL}/api/tickets`, {
+            const response = await apiFetch(`${WORKER_URL}/api/tickets`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     subject: document.getElementById('subject').value,
                     category: document.getElementById('category').value,
@@ -86,22 +93,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 navigateTo('tickets-list');
                 loadTickets();
             } else {
-                alert('خطا در ثبت تیکت.');
+                const data = await response.json();
+                alert(data.error || 'خطا در ثبت تیکت.');
             }
         } catch (error) {
-            console.error('Error:', error);
-            alert('خطا در ارتباط با سرور.');
+            console.error(error);
         } finally {
             submitBtn.innerText = 'ارسال تیکت';
             submitBtn.disabled = false;
         }
     });
 
-    // 4. بارگذاری اولیه تیکت‌ها
+    // 5. بارگذاری تیکت‌ها
     loadTickets();
 });
 
-// ✅ تابع اصلاح‌شده دریافت تیکت‌ها با Event Delegation
+function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 async function loadTickets() {
     const container = document.getElementById('tickets-container');
     const statOpen = document.getElementById('stat-open');
@@ -109,7 +121,7 @@ async function loadTickets() {
     const statTotal = document.getElementById('stat-total');
 
     try {
-        const response = await fetch(`${WORKER_URL}/api/tickets`);
+        const response = await apiFetch(`${WORKER_URL}/api/tickets`);
         
         if (response.ok) {
             const tickets = await response.json();
@@ -128,32 +140,21 @@ async function loadTickets() {
                 return;
             }
 
-            // ✅ استفاده از data-id به جای onclick مستقیم
             container.innerHTML = tickets.map(ticket => `
                 <div class="ticket-card" data-ticket-id="${ticket.id}">
-                    <h3>${ticket.subject}</h3>
-                    <p style="color: var(--text-secondary); font-size: 0.95rem;">${ticket.message.substring(0, 80)}...</p>
+                    <h3>${escapeHTML(ticket.subject)}</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">${escapeHTML(ticket.message.substring(0, 80))}...</p>
                     <span class="status">${ticket.status === 'open' ? 'در انتظار بررسی' : 'پاسخ داده شده'}</span>
                 </div>
             `).join('');
 
-            // ✅ اضافه کردن لیسنر کلیک به همه کارت‌ها بعد از رندر شدن
             document.querySelectorAll('.ticket-card').forEach(card => {
                 card.addEventListener('click', () => {
-                    const ticketId = card.getAttribute('data-ticket-id');
-                    window.location.href = `/view.html?id=${ticketId}`;
+                    window.location.href = `/view.html?id=${card.getAttribute('data-ticket-id')}`;
                 });
             });
-
-        } else {
-            throw new Error('Server error');
         }
     } catch (error) {
-        console.error('Error loading tickets:', error);
-        container.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">📭</div>
-                <div>خطا در ارتباط با سرور.</div>
-            </div>`;
+        console.error(error);
     }
 }
