@@ -141,7 +141,7 @@ async function loadTickets() {
             document.querySelectorAll('.ticket-card').forEach(card => {
                 card.addEventListener('click', () => {
                     const ticketId = card.getAttribute('data-ticket-id');
-                    window.location.href = `/view?id=${ticketId}`;
+                    window.location.href = `/view.html?id=${ticketId}`;
                 });
             });
 
